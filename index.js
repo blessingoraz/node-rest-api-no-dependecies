@@ -101,7 +101,6 @@ const unifiedServer = (req, res) => {
 
         // Route request to the handler specified in the router
         chosenHandler(data, (statusCode, payload) => {
-            console.log()
             // Default statuscode if it's not present
             statusCode = typeof statusCode === 'number' ? statusCode : 200
 
