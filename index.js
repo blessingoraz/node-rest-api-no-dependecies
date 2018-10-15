@@ -17,6 +17,10 @@ const _data = require('./lib/data')
 
 // TEST This
 // TODO: Delete cos it's for testing
+// helpers.sendTwilioSms('8037605877', 'Hello', (err) => {
+//     console.log('There was an error', err)
+// })
+
 // _data.create('test', 'newFile3', {'hello': 'Fam'}, (err) => {
 //     console.log('Error should be here====', err)
 // })
