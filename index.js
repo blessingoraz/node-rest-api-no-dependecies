@@ -4,130 +4,23 @@
 */
 
 // Dependencies
-const http = require('http')
-const https = require('https')
-const url = require('url')
-const fs = require('fs')
-const StringDecoder = require('string_decoder').StringDecoder
+const server = require('./lib/server')
+const workers = require('./lib/workers')
 
-const config = require('./lib/config')
-const handlers = require('./lib/handlers')
-const helpers = require('./lib/helpers')
-const _data = require('./lib/data')
+// Declare the app
+let app = {}
 
-// TEST This
-// TODO: Delete cos it's for testing
-// helpers.sendTwilioSms('8037605877', 'Hello', (err) => {
-//     console.log('There was an error', err)
-// })
+// Init function
+app.init = () => {
+    // Start the server
+    server.init()
 
-// _data.create('test', 'newFile3', {'hello': 'Fam'}, (err) => {
-//     console.log('Error should be here====', err)
-// })
-
-// _data.read('test', 'newFile', (err, data) => {
-//     console.log('Error should be here====', err)
-// })
-
-// _data.delete('test', 'newFile2', (err, data) => {
-//     console.log('Error should be here====', err, 'and data is here ==', data)
-// })
-
-// _data.update('test', 'newFile',{'Fizz': 'Buzz'}, (err) => {
-//     console.log('Error should be here====', err)
-// })
-
-// Instatiate HTTP server
-let httpServer = http.createServer((req, res) => {
-    unifiedServer(req, res)
-})
-
-// Start HTTP server
-httpServer.listen(config.httpPort, () => {
-    console.log(`Listening to PORT ${config.httpPort}`)
-})
-
-// Instatiate HTTPS server
-const httpServerOptions = {
-    'key': fs.readFileSync('./https/key.pem'),
-    'cert': fs.readFileSync('./https/cert.pem')
+    // Start the workers
+    workers.init()
 }
 
-let httpsServer = https.createServer(httpServerOptions, (req, res) => {
-    unifiedServer(req, res)
-})
+// Execute 
+app.init()
 
-// Start HTTPS server
-httpsServer.listen(config.httpsPort, () => {
-    console.log(`Listening to PORT ${config.httpsPort}`)
-})
-
-// All server logic for both http and https
-const unifiedServer = (req, res) => {
-    // Get url and parse it
-    const parsedUrl = url.parse(req.url, true)
-
-    // Get the path
-    const path = parsedUrl.pathname
-    const trimmedPath = path.replace( /^\/+|\/+$/g, '')
-
-    // Get the queryString
-    const queryStringObject = parsedUrl.query
-
-    // Get the HTTP method
-    const method = req.method.toLowerCase()
-
-    // Get the headers
-    const headers = req.headers
-
-    // Get the payload, if it exist
-    let decoder = new StringDecoder('utf-8')
-    let buffer = ''
-
-    req.on('data', (data) => {
-        buffer += decoder.write(data)
-    })
-
-    req.on('end', () => {
-        buffer += decoder.end()
-
-        // Choose handler which request should go to
-        let chosenHandler = typeof router[trimmedPath] !== 'undefined' ? router[trimmedPath] : handlers.notFound
-
-        // Construct data object to send to handler
-        const data = {
-            trimmedPath,
-            queryStringObject,
-            method,
-            headers,
-            payload: helpers.parseJSONToObject(buffer)
-        }
-
-        // Route request to the handler specified in the router
-        chosenHandler(data, (statusCode, payload) => {
-            // Default statuscode if it's not present
-            statusCode = typeof statusCode === 'number' ? statusCode : 200
-
-            // Default payload if it's not present
-            payload = typeof payload === 'object' ? payload : {}
-            let payloadString = JSON.stringify(payload)
-
-            // Return the response
-            res.setHeader('Content-Type', 'application/json')
-            res.writeHead(statusCode)
-            res.end(payloadString)
-            
-            // Log response
-            console.log('Here is the response: ========', statusCode, payloadString)
-        })
-    })
-}
-
-// Define a request handler
-const router = {
-    'sample': handlers.sample,
-    'ping': handlers.ping,
-    'users': handlers.users,
-    'tokens': handlers.tokens,
-    'checks': handlers.checks
-}
+// Export the app
+module.exports = app
